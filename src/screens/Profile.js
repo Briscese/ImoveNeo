@@ -1,28 +1,34 @@
+// Profile.js
 import React, { Component } from "react";
+import { connect } from "react-redux";
+import { logout } from "../store/actions/user";
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Gravatar } from 'react-native-gravatar';
 
 class Profile extends Component {
     logout = () => {
+        this.props.onLogout();
         this.props.navigation.replace('Auth');
     }
-    
+
+    componentDidMount() {
+        console.log('Profile component props:', this.props);
+    }
 
     render() {
-        const options = { email: 'gabriel@gmail.com', secure: true };
+        const { email, name, endereco, telefonecelular } = this.props;
+        const options = { email, secure: true };
+        
         return (
             <View style={styles.container}>
                 <Gravatar options={options} style={styles.avatar} />
-                <Text style={styles.nickname}>Briscese</Text>
-                <Text style={styles.email}>gabriel@gmail.com</Text>
+                <Text style={styles.name}>{name}</Text>
+                <Text style={styles.email}>{email}</Text>
                 <View style={styles.endereco}>
-                    <Text>Rua: Rua do Desenvolvedor</Text>
-                    <Text>Bairro: Centro</Text>
-                    <Text>Localização: São Paulo</Text>
+                    <Text>{endereco}</Text>                   
                 </View>
                 <View style={styles.telefonecelular}>
-                    <Text>Telefone: (12) 9999-9999</Text>
-                    <Text>Celular: (12) 9999-9999</Text>
+                    <Text>{telefonecelular}</Text>
                 </View>
                 <TouchableOpacity onPress={this.logout} style={styles.button}>
                     <Text style={styles.buttonText}>Sair</Text>
@@ -43,7 +49,7 @@ const styles = StyleSheet.create({
         height: 150,
         borderRadius: 75
     },
-    nickname: {
+    name: {
         marginTop: 30,
         fontSize: 30,
         fontWeight: 'bold'
@@ -71,4 +77,15 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Profile;
+const mapStateToProps = (state) => {
+    const { email, name, endereco, telefonecelular } = state.user || {};
+    return { email, name, endereco, telefonecelular };
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        onLogout: () => dispatch(logout())
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Profile);

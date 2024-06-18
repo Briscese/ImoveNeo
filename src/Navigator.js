@@ -7,13 +7,26 @@ import Imoveis from "./screens/Imoveis";
 import AddImoveis from "./screens/AddImoveis";
 import Profile from "./screens/Profile";
 import Login from "./screens/Login";
+import Registro from "./screens/Registro";
+
+// Atualize a definição do stack navigator para a tela de autenticação
+const AuthStack = createStackNavigator();
+
+function AuthStackScreen() {
+    return (
+        <AuthStack.Navigator initialRouteName="Login">
+            <AuthStack.Screen name="Login" component={Login} options={{ title: 'Login' }} />
+            <AuthStack.Screen name="Registro" component={Registro} options={{ title: 'Registro' }} />
+        </AuthStack.Navigator>
+    );
+}
 
 const Stack = createStackNavigator();
 
 function ProfileStack() {
     return (
         <Stack.Navigator initialRouteName="Auth">
-            <Stack.Screen name="Auth" component={Login} options={{ headerShown: false }} />
+            <Stack.Screen name="Auth" component={AuthStackScreen} options={{ headerShown: false }} />
             <Stack.Screen name="ProfileScreen" component={Profile} options={{ headerShown: false }} />
         </Stack.Navigator>
     );

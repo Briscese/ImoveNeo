@@ -1,16 +1,22 @@
 import React, { Component } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { connect } from "react-redux";
+import { login } from "../store/actions/user";
 
 class Login extends Component {
     state = {
+        name:'Temporario',
         email: '',
-        password: ''
+        password: '',
+        endereco: 'Rua do teste, 123',
+        telefonecelular: '123456789'
     };
 
     login = () => {
+        console.log("Login Data:", { ...this.state });
+        this.props.onLogin({ ...this.state });
         this.props.navigation.replace('ProfileScreen');
     }
-    
 
     render() {
         return (
@@ -25,7 +31,9 @@ class Login extends Component {
                 <TouchableOpacity onPress={this.login} style={styles.button}>
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => {}} style={styles.button}>
+                <TouchableOpacity onPress={() => {
+                    this.props.navigation.navigate('Registro')
+                }} style={styles.button}>
                     <Text style={styles.buttonText}>
                         Criar nova conta.
                     </Text>
@@ -60,4 +68,10 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Login;
+const mapDispatchToProps = dispatch => {
+    return {
+        onLogin: user => dispatch(login(user))
+    };
+};
+
+export default connect(null, mapDispatchToProps)(Login);
