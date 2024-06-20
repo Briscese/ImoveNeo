@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "503567233419",
+    "firebase_url": "https://imovelneo-default-rtdb.firebaseio.com",
+    "project_id": "imovelneo",
+    "storage_bucket": "imovelneo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503567233419:android:586a1c8669c16b05f43f8e",
+        "android_client_info": {
+          "package_name": "com.imovelneo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApIlD8KvZAINrO3r4iYDsx6lPsvEXSvmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
