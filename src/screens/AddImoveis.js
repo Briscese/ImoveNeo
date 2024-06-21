@@ -21,6 +21,7 @@ import { GOOGLE_MAPS_API_KEY } from './config';
 import storage from '@react-native-firebase/storage';
 import database from '@react-native-firebase/database';
 
+
 Geocoder.init(GOOGLE_MAPS_API_KEY);
 
 const pickerSelectStyles = StyleSheet.create({
@@ -113,6 +114,33 @@ function AddImoveis() {
     }
   };
 
+  const requestCameraPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'Permissão para usar a câmera',
+          message: 'O aplicativo precisa de permissão para usar sua câmera',
+          buttonNeutral: 'Perguntar depois',
+          buttonNegative: 'Cancelar',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Você pode usar a câmera');
+      } else {
+        console.log('Permissão de câmera negada');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+  
+  // Solicitar a permissão da câmera quando o componente for montado
+  useEffect(() => {
+    requestCameraPermission();
+  }, []);
+
   const selectPhoto = () => {
     launchImageLibrary({ mediaType: 'photo' }, response => {
       if (response.assets && response.assets.length > 0) {
@@ -121,12 +149,21 @@ function AddImoveis() {
     });
   };
 
-  const takePhoto = () => {
-    launchCamera({ mediaType: 'photo' }, response => {
-      if (response.assets && response.assets.length > 0) {
-        setPhoto(response.assets[0].uri);
-      }
-    });
+  const takePhoto = async () => {
+    const options = {
+      mediaType: 'photo',
+      saveToPhotos: true,
+    };
+  
+    const result = await launchCamera(options);
+  
+    if (result.didCancel) {
+      console.log('User cancelled image picker');
+    } else if (result.errorCode) {
+      console.log('ImagePicker Error: ', result.errorMessage);
+    } else if (result.assets && result.assets.length > 0) {
+      setPhoto(result.assets[0].uri);
+    }
   };
 
   const save = async () => {
