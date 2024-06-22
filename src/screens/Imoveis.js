@@ -1,36 +1,100 @@
-import React, {Component} from "react";
-import { StyleSheet,FlatList,  View } from "react-native";
-import Header from "../components/Header";
-import Post from "../components/Post";
-
+import React, { Component } from 'react';
+import { StyleSheet, View, FlatList, Text, Image, TouchableOpacity } from 'react-native';
+import database from '@react-native-firebase/database'; // Importação correta do database
+import Header from '../components/Header';
 
 class Imoveis extends Component {
+  state = {
+    imoveis: [],
+  };
 
-    state = {}
-    
-    render() {
-        return (
-            <View style={styles.container}>
-                <Header />
-                
-            </View>
-        );
-        
-    }
+  componentDidMount() {
+    this.carregarImoveis();
+  }
+
+  carregarImoveis = () => {
+    database()
+      .ref('imoveis')
+      .on('value', snapshot => {
+        const imoveis = [];
+        snapshot.forEach(childSnapshot => {
+          const imovel = childSnapshot.val();
+          imoveis.push(imovel);
+        });
+        this.setState({ imoveis });
+      });
+  };
+
+  renderItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => {
+        console.log("Imovel selecionado:", item); // Verifica o objeto imovel antes de navegar
+        this.props.navigation.navigate('DetalhesImovel', { imovel: item });
+      }}
+    >
+      <View style={styles.imovelContainer}>
+        {item.photos && item.photos.length > 0 ? (
+          <Image source={{ uri: item.photos[0] }} style={styles.imagem} />
+        ) : (
+          <View style={styles.placeholder} />
+        )}
+        <View style={styles.textoContainer}>
+          <Text style={styles.texto}>{item.tipoTransacao}</Text>
+          <Text style={styles.texto}>Tipo de Imovel:{item.tipoImovel}</Text>
+          <Text style={styles.texto}>Rua:{item.rua}</Text>
+          <Text style={styles.texto}>Numero do Imovel:{item.numeroImovel}</Text>
+          <Text style={styles.texto}>R$ {item.valor}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+  
+
+  render() {
+    const { imoveis } = this.state;
+
+    return (
+      <View style={styles.container}>
+        <Header />
+        <FlatList
+          data={imoveis}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={this.renderItem}
+        />
+      </View>
+    );
+  }
 }
 
-
-
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f5fcff",
-        justifyContent: "center",
-        alignContent: "center"
-    }
+  container: {
+    flex: 1,
+    backgroundColor: '#f5fcff',
+  },
+  imovelContainer: {
+    flexDirection: 'row',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  imagem: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+  },
+  placeholder: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+    backgroundColor: '#ccc', // Cor de fundo para o espaço reservado
+  },
+  textoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  texto: {
+    fontSize: 16,
+  },
 });
 
 export default Imoveis;
-
-

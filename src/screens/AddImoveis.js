@@ -9,18 +9,17 @@ import {
   TouchableOpacity,
   ScrollView,
   PermissionsAndroid,
-  Alert
+  Alert,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import firestore from '@react-native-firebase/firestore';
 import RNPickerSelect from 'react-native-picker-select';
 import Geolocation from '@react-native-community/geolocation';
 import MapView, { Marker } from 'react-native-maps';
 import Geocoder from 'react-native-geocoding';
-import { GOOGLE_MAPS_API_KEY } from './config';
 import storage from '@react-native-firebase/storage';
 import database from '@react-native-firebase/database';
 
+import { GOOGLE_MAPS_API_KEY } from './config';
 
 Geocoder.init(GOOGLE_MAPS_API_KEY);
 
@@ -50,7 +49,7 @@ const pickerSelectStyles = StyleSheet.create({
 });
 
 function AddImoveis() {
-  const [photo, setPhoto] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const [tipoImovel, setTipoImovel] = useState('');
   const [rua, setRua] = useState('');
   const [bairro, setBairro] = useState('');
@@ -59,6 +58,11 @@ function AddImoveis() {
   const [complemento, setComplemento] = useState('');
   const [tipoTransacao, setTipoTransacao] = useState('');
   const [valor, setValor] = useState('');
+  const [markerPosition, setMarkerPosition] = useState({
+    latitude: -23.55052,
+    longitude: -46.633309,
+  });
+
   const [region, setRegion] = useState({
     latitude: -23.55052,
     longitude: -46.633309,
@@ -66,10 +70,23 @@ function AddImoveis() {
     longitudeDelta: 0.0121,
   });
 
+  const handleMarkerDragEnd = e => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    setRegion({ ...region, latitude, longitude });
+    Geocoder.from(latitude, longitude)
+      .then(json => {
+        const addressComponent = json.results[0].formatted_address;
+        setLocalizacao(addressComponent);
+      })
+      .catch(error => console.warn(error));
+  };
+
   const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
         const { latitude, longitude } = position.coords;
+        setMarkerPosition({ latitude, longitude });
         setRegion({ ...region, latitude, longitude });
         Geocoder.from(latitude, longitude)
           .then(json => {
@@ -105,7 +122,7 @@ function AddImoveis() {
 
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         console.log('Permissão de localização concedida');
-        getCurrentLocation(); // Chama a função para obter a localização atual
+        getCurrentLocation();
       } else {
         console.log('Permissão de localização negada');
       }
@@ -135,16 +152,16 @@ function AddImoveis() {
       console.warn(err);
     }
   };
-  
-  // Solicitar a permissão da câmera quando o componente for montado
+
   useEffect(() => {
     requestCameraPermission();
   }, []);
 
   const selectPhoto = () => {
-    launchImageLibrary({ mediaType: 'photo' }, response => {
+    launchImageLibrary({ mediaType: 'photo', selectionLimit: 0 }, response => {
       if (response.assets && response.assets.length > 0) {
-        setPhoto(response.assets[0].uri);
+        const newPhotos = response.assets.map(asset => asset.uri);
+        setPhotos([...photos, ...newPhotos]);
       }
     });
   };
@@ -154,39 +171,43 @@ function AddImoveis() {
       mediaType: 'photo',
       saveToPhotos: true,
     };
-  
+
     const result = await launchCamera(options);
-  
+
     if (result.didCancel) {
       console.log('User cancelled image picker');
     } else if (result.errorCode) {
       console.log('ImagePicker Error: ', result.errorMessage);
     } else if (result.assets && result.assets.length > 0) {
-      setPhoto(result.assets[0].uri);
+      const newPhotos = result.assets.map(asset => asset.uri);
+      setPhotos([...photos, ...newPhotos]);
     }
   };
 
   const save = async () => {
     try {
       console.log('Salvando imóvel no Realtime Database e Storage');
-      
-      // Upload da foto para o Firebase Storage
-      const uploadUri = photo;
-      let filename = uploadUri.substring(uploadUri.lastIndexOf('/') + 1);
-      const task = storage().ref(filename).putFile(uploadUri);
-      
-      // Monitorar o progresso do upload
-      task.on('state_changed', snapshot => {
-        console.log('Progresso do upload: ', (snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-      });
-
-      // Esperar o upload completar
-      await task;
-
-      // Obter a URL da foto salva no Storage
-      const photoURL = await storage().ref(filename).getDownloadURL();
-
-      // Salvar os dados no Realtime Database
+  
+      const photoURLs = [];
+  
+      for (const photo of photos) {
+        const uploadUri = photo;
+        let filename = uploadUri.substring(uploadUri.lastIndexOf('/') + 1);
+        const task = storage().ref(filename).putFile(uploadUri);
+  
+        task.on('state_changed', snapshot => {
+          console.log(
+            'Progresso do upload: ',
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+          );
+        });
+  
+        await task;
+  
+        const photoURL = await storage().ref(filename).getDownloadURL();
+        photoURLs.push(photoURL);
+      }
+  
       await database().ref('imoveis').push({
         tipoImovel,
         rua,
@@ -196,22 +217,36 @@ function AddImoveis() {
         complemento,
         tipoTransacao,
         valor,
-        photo: photoURL,
-        region
+        photos: photoURLs,
+        region,
       });
-
+  
+      // Limpar os campos após salvar com sucesso
+      setTipoImovel('');
+      setRua('');
+      setBairro('');
+      setLocalizacao('');
+      setNumeroImovel('');
+      setComplemento('');
+      setTipoTransacao('');
+      setValor('');
+      setPhotos([]);
+  
       Alert.alert('Sucesso', 'Imóvel cadastrado com sucesso!');
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro ao cadastrar o imóvel.');
       console.error('Erro ao salvar imóvel: ', error.message);
     }
   };
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Foto do Imóvel</Text>
       <View style={styles.photoContainer}>
-        {photo && <Image source={{ uri: photo }} style={styles.photo} />}
+        {photos.map((photo, index) => (
+          <Image key={index} source={{ uri: photo }} style={styles.photo} />
+        ))}
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={selectPhoto}>
             <Text>Selecionar da Galeria</Text>
@@ -221,82 +256,87 @@ function AddImoveis() {
           </TouchableOpacity>
         </View>
       </View>
+
       <Text style={styles.label}>Tipo de Imóvel</Text>
       <RNPickerSelect
         onValueChange={value => setTipoImovel(value)}
         items={[
-          { label: 'Casa', value: 'casa' },
-          { label: 'Apartamento', value: 'apartamento' },
-          { label: 'Sala Comercial', value: 'sala_comercial' },
-          { label: 'Terreno', value: 'terreno' },
+          { label: 'Apartamento', value: 'Apartamento' },
+          { label: 'Casa', value: 'Casa' },
+          { label: 'Comercial', value: 'Comercial' },
         ]}
         style={pickerSelectStyles}
       />
-      <Text style={styles.label}>Rua</Text>
-      <TextInput style={styles.input} value={rua} onChangeText={setRua} />
-      <Text style={styles.label}>Bairro</Text>
-      <TextInput style={styles.input} value={bairro} onChangeText={setBairro} />
-      <Text style={styles.label}>Localização</Text>
-      <View style={styles.locationContainer}>
-        <TextInput
-          style={styles.input}
-          value={localizacao}
-          onChangeText={setLocalizacao}
-        />
-        <Button title="Usar localização atual" onPress={getCurrentLocation} />
-      </View>
-      <Text style={styles.label}>Número do Imóvel</Text>
+
+      <Text style={styles.label}>Endereço</Text>
       <TextInput
         style={styles.input}
+        placeholder="Rua"
+        value={rua}
+        onChangeText={text => setRua(text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Bairro"
+        value={bairro}
+        onChangeText={text => setBairro(text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Número"
         value={numeroImovel}
-        onChangeText={setNumeroImovel}
+        onChangeText={text => setNumeroImovel(text)}
       />
-      <Text style={styles.label}>Complemento</Text>
       <TextInput
         style={styles.input}
+        placeholder="Complemento"
         value={complemento}
-        onChangeText={setComplemento}
+        onChangeText={text => setComplemento(text)}
       />
-      <Text style={styles.label}>Tipo de Negociação</Text>
+
+      <Text style={styles.label}>Tipo de Transação</Text>
       <RNPickerSelect
         onValueChange={value => setTipoTransacao(value)}
         items={[
-          { label: 'Aluguel', value: 'aluguel' },
-          { label: 'Venda', value: 'venda' },
+          { label: 'Venda', value: 'Venda' },
+          { label: 'Aluguel', value: 'Aluguel' },
         ]}
         style={pickerSelectStyles}
       />
-      <Text style={styles.label}>
-        Valor ({tipoTransacao === 'aluguel' ? 'Aluguel' : 'Venda'})
-      </Text>
+
+      <Text style={styles.label}>Valor</Text>
       <TextInput
         style={styles.input}
+        placeholder="Valor"
         value={valor}
-        onChangeText={setValor}
+        onChangeText={text => setValor(text)}
         keyboardType="numeric"
       />
 
-      <Button title="Cadastrar Imóvel" onPress={save} />
+      <Text style={styles.label}>Localização no Mapa</Text>
       <MapView
         style={styles.map}
         region={region}
-        onRegionChangeComplete={region => setRegion(region)}>
+        onRegionChangeComplete={region => setRegion(region)}
+      >
         <Marker
-          coordinate={{ latitude: region.latitude, longitude: region.longitude }}
+          coordinate={markerPosition}
+          draggable
+          onDragEnd={handleMarkerDragEnd}
         />
       </MapView>
+
+      <Button title="Salvar" onPress={save} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: 20,
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
   },
@@ -304,31 +344,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 4,
-    padding: 8,
+    padding: 10,
+    marginBottom: 20,
+  },
+  map: {
+    width: '100%',
+    height: 200,
     marginBottom: 20,
   },
   photoContainer: {
-    alignItems: 'center',
     marginBottom: 20,
   },
   photo: {
-    width: 200,
-    height: 200,
-    marginBottom: 10,
+    width: 100,
+    height: 100,
+    marginRight: 10,
   },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   button: {
-    backgroundColor: '#007bff',
     padding: 10,
+    backgroundColor: '#ddd',
     borderRadius: 4,
-    marginHorizontal: 5,
-  },
-  map: {
-    height: 200,
-    marginTop: 20,
   },
 });
 

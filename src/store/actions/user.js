@@ -1,5 +1,4 @@
-import { USER_LOGGED_IN } from "./actionTypes";
-import { USER_LOGGED_OUT } from "./actionTypes";
+import { USER_LOGGED_IN, USER_LOGGED_OUT } from "./actionTypes";
 
 export const login = user => {
     return {
