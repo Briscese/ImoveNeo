@@ -93,8 +93,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   texto: {
+    color:'#000000',
     fontSize: 16,
   },
+  
 });
 
 export default Imoveis;

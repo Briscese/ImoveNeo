@@ -10,6 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import database from '@react-native-firebase/database';
+import MapView, { Marker } from 'react-native-maps';
+import Geocoder from 'react-native-geocoding';
 
 const DetalhesImovel = ({ route, navigation }) => {
   const { imovel } = route.params;
@@ -103,6 +105,27 @@ const DetalhesImovel = ({ route, navigation }) => {
           </Text>
         </TouchableOpacity>
       )}
+
+      
+      <Text style={styles.label}>Localização no Mapa:</Text>
+      <View style={styles.mapContainer}>
+        <MapView
+          style={styles.map}
+          region={{
+            latitude: imovel.region.latitude,
+            longitude: imovel.region.longitude,
+            latitudeDelta: 0.015,
+            longitudeDelta: 0.0121,
+          }}
+        >
+          <Marker
+            coordinate={{
+              latitude: imovel.region.latitude,
+              longitude: imovel.region.longitude,
+            }}
+          />
+        </MapView>
+      </View>
     </ScrollView>
   );
 };
@@ -167,6 +190,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#FFF',
     textAlign: 'center',
+  },
+  mapContainer: {
+    width: '100%',
+    height: 300,
+    marginTop: 20,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
   },
 });
 

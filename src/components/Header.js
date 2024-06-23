@@ -13,8 +13,8 @@ class Header extends Component {
     return (
       <View style={styles.container}>
         <View style={styles.rowContainer}>
-          <Image source={icon} style={styles.image} />
-          <Text style={styles.title}>Imovel Neo</Text>
+          <Image source={photoURL} style={styles.image} />
+          <Text style={styles.title}>Imoveis Neo</Text>
         </View>
         <View style={styles.userContainer}>
           <Text style={styles.user}>{name}</Text>
@@ -37,7 +37,7 @@ class Header extends Component {
 const styles = StyleSheet.create({
   container: {
     marginTop: Platform.OS === 'ios' ? 20 : 0,
-    padding: 10,
+    padding: 20,
     borderBottomWidth: 1,
     borderColor: '#BBB',
     flexDirection: 'row',
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#000',
-    height: 30,
+    height: 40,
     fontSize: 28,
   },
   userContainer: {

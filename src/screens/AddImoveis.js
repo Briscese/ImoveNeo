@@ -70,38 +70,6 @@ function AddImoveis() {
     longitudeDelta: 0.0121,
   });
 
-  const handleMarkerDragEnd = e => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    setMarkerPosition({ latitude, longitude });
-    setRegion({ ...region, latitude, longitude });
-    Geocoder.from(latitude, longitude)
-      .then(json => {
-        const addressComponent = json.results[0].formatted_address;
-        setLocalizacao(addressComponent);
-      })
-      .catch(error => console.warn(error));
-  };
-
-  const getCurrentLocation = () => {
-    Geolocation.getCurrentPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-        setMarkerPosition({ latitude, longitude });
-        setRegion({ ...region, latitude, longitude });
-        Geocoder.from(latitude, longitude)
-          .then(json => {
-            const addressComponent = json.results[0].formatted_address;
-            setLocalizacao(addressComponent);
-          })
-          .catch(error => console.warn(error));
-      },
-      error => {
-        console.log(error.code, error.message);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
-    );
-  };
-
   useEffect(() => {
     requestLocationPermission();
   }, []);
@@ -129,6 +97,50 @@ function AddImoveis() {
     } catch (err) {
       console.warn(err);
     }
+  };
+
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        setMarkerPosition({ latitude, longitude });
+        setRegion({ ...region, latitude, longitude });
+        Geocoder.from(latitude, longitude)
+          .then(json => {
+            const addressComponent = json.results[0].formatted_address;
+            setLocalizacao(addressComponent);
+          })
+          .catch(error => console.warn(error));
+      },
+      error => {
+        console.log(error.code, error.message);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+    );
+  };
+
+  const handleMarkerDragEnd = e => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    setRegion({ ...region, latitude, longitude });
+    Geocoder.from(latitude, longitude)
+      .then(json => {
+        const addressComponent = json.results[0].formatted_address;
+        setLocalizacao(addressComponent);
+      })
+      .catch(error => console.warn(error));
+  };
+
+  const handleMapPress = e => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    setRegion({ ...region, latitude, longitude });
+    Geocoder.from(latitude, longitude)
+      .then(json => {
+        const addressComponent = json.results[0].formatted_address;
+        setLocalizacao(addressComponent);
+      })
+      .catch(error => console.warn(error));
   };
 
   const requestCameraPermission = async () => {
@@ -187,27 +199,27 @@ function AddImoveis() {
   const save = async () => {
     try {
       console.log('Salvando imóvel no Realtime Database e Storage');
-  
+
       const photoURLs = [];
-  
+
       for (const photo of photos) {
         const uploadUri = photo;
         let filename = uploadUri.substring(uploadUri.lastIndexOf('/') + 1);
         const task = storage().ref(filename).putFile(uploadUri);
-  
+
         task.on('state_changed', snapshot => {
           console.log(
             'Progresso do upload: ',
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         });
-  
+
         await task;
-  
+
         const photoURL = await storage().ref(filename).getDownloadURL();
         photoURLs.push(photoURL);
       }
-  
+
       await database().ref('imoveis').push({
         tipoImovel,
         rua,
@@ -220,7 +232,7 @@ function AddImoveis() {
         photos: photoURLs,
         region,
       });
-  
+
       // Limpar os campos após salvar com sucesso
       setTipoImovel('');
       setRua('');
@@ -231,21 +243,20 @@ function AddImoveis() {
       setTipoTransacao('');
       setValor('');
       setPhotos([]);
-  
+
       Alert.alert('Sucesso', 'Imóvel cadastrado com sucesso!');
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro ao cadastrar o imóvel.');
       console.error('Erro ao salvar imóvel: ', error.message);
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Foto do Imóvel</Text>
       <View style={styles.photoContainer}>
         {photos.map((photo, index) => (
-          <Image key={index} source={{ uri: photo }} style={styles.photo} />
+          <Image key={index} source={{uri: photo}} style={styles.photo} />
         ))}
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={selectPhoto}>
@@ -261,9 +272,9 @@ function AddImoveis() {
       <RNPickerSelect
         onValueChange={value => setTipoImovel(value)}
         items={[
-          { label: 'Apartamento', value: 'Apartamento' },
-          { label: 'Casa', value: 'Casa' },
-          { label: 'Comercial', value: 'Comercial' },
+          {label: 'Apartamento', value: 'Apartamento'},
+          {label: 'Casa', value: 'Casa'},
+          {label: 'Comercial', value: 'Comercial'},
         ]}
         style={pickerSelectStyles}
       />
@@ -271,6 +282,7 @@ function AddImoveis() {
       <Text style={styles.label}>Endereço</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor={'#000000'}
         placeholder="Rua"
         value={rua}
         onChangeText={text => setRua(text)}
@@ -278,17 +290,20 @@ function AddImoveis() {
       <TextInput
         style={styles.input}
         placeholder="Bairro"
+        placeholderTextColor={'#000000'}
         value={bairro}
         onChangeText={text => setBairro(text)}
       />
       <TextInput
         style={styles.input}
+        placeholderTextColor={'#000000'}
         placeholder="Número"
         value={numeroImovel}
         onChangeText={text => setNumeroImovel(text)}
       />
       <TextInput
         style={styles.input}
+        placeholderTextColor={'#000000'}
         placeholder="Complemento"
         value={complemento}
         onChangeText={text => setComplemento(text)}
@@ -298,8 +313,8 @@ function AddImoveis() {
       <RNPickerSelect
         onValueChange={value => setTipoTransacao(value)}
         items={[
-          { label: 'Venda', value: 'Venda' },
-          { label: 'Aluguel', value: 'Aluguel' },
+          {label: 'Venda', value: 'Venda'},
+          {label: 'Aluguel', value: 'Aluguel'},
         ]}
         style={pickerSelectStyles}
       />
@@ -307,6 +322,7 @@ function AddImoveis() {
       <Text style={styles.label}>Valor</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor={'#000000'}
         placeholder="Valor"
         value={valor}
         onChangeText={text => setValor(text)}
@@ -318,6 +334,7 @@ function AddImoveis() {
         style={styles.map}
         region={region}
         onRegionChangeComplete={region => setRegion(region)}
+        onPress={handleMapPress} // Adicione esta linha
       >
         <Marker
           coordinate={markerPosition}
@@ -339,6 +356,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#000000',
   },
   input: {
     borderWidth: 1,
@@ -346,6 +364,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 10,
     marginBottom: 20,
+    color: '#000000',
   },
   map: {
     width: '100%',
@@ -368,6 +387,10 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#ddd',
     borderRadius: 4,
+  },
+  text: {
+    color: '#000000', // Cor preta para texto global
+    fontSize: 16,
   },
 });
 

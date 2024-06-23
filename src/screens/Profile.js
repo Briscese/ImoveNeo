@@ -77,7 +77,7 @@ class Profile extends Component {
     return (
       <ScrollView contentContainerStyle={styles.container}>
         <Image source={require('../assets/icon.png')} style={styles.logo} />
-        <Text style={styles.welcomeText}>Bem Vindo a Imobiliaria Neo</Text>
+        <Text style={styles.text}>Bem Vindo a Imobiliaria Neo</Text>
         {userInfo ? (
           <>
             <Image source={{ uri: userInfo.user.photo }} style={styles.avatar} />
@@ -125,11 +125,13 @@ const styles = StyleSheet.create({
   name: {
     marginTop: 30,
     fontSize: 30,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: '#000000'
   },
   email: {
     marginTop: 20,
-    fontSize: 25
+    fontSize: 25,
+    color: '#000000'
   },
   button: {
     marginTop: 30,
@@ -139,7 +141,11 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 20,
     color: '#FFF'
-  }
+  },
+  text: {
+    color: '#000000', // Cor preta para texto global
+    fontSize: 16,
+  },
 });
 
 const mapDispatchToProps = dispatch => {
