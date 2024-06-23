@@ -76,6 +76,8 @@ class Profile extends Component {
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
+        <Image source={require('../assets/icon.png')} style={styles.logo} />
+        <Text style={styles.welcomeText}>Bem Vindo a Imobiliaria Neo</Text>
         {userInfo ? (
           <>
             <Image source={{ uri: userInfo.user.photo }} style={styles.avatar} />
@@ -103,6 +105,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
+  },
+  welcomeText: {
+    fontSize: 20,
+    marginBottom: 40,
+    textAlign: 'center',
   },
   avatar: {
     width: 150,

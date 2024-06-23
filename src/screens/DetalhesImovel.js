@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
+import database from '@react-native-firebase/database';
 
-const DetalhesImovel = ({route}) => {
-  const {imovel} = route.params;
+const DetalhesImovel = ({ route, navigation }) => {
+  const { imovel } = route.params;
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = React.useState(0);
 
@@ -19,11 +21,30 @@ const DetalhesImovel = ({route}) => {
     setModalVisible(true);
   };
 
+  const handleTransaction = () => {
+    const newTipoTransacao = 'Indisponível';
+    database()
+      .ref(`imoveis/${imovel.id}`)
+      .update({ tipoTransacao: newTipoTransacao })
+      .then(() => {
+        Alert.alert('Negócio Feito!', 'A propriedade foi marcada como indisponível.', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Imoveis'),
+          },
+        ]);
+      })
+      .catch(error => {
+        Alert.alert('Erro', 'Ocorreu um erro ao atualizar a propriedade.');
+        console.error('Erro ao atualizar a propriedade:', error);
+      });
+  };
+
   const renderImovelPhotos = () => {
     if (imovel && imovel.photos && imovel.photos.length > 0) {
       return imovel.photos.map((photo, index) => (
         <TouchableOpacity key={index} onPress={() => handlePhotoPress(index)}>
-          <Image source={{uri: photo}} style={styles.imovelPhoto} />
+          <Image source={{ uri: photo }} style={styles.imovelPhoto} />
         </TouchableOpacity>
       ));
     } else {
@@ -38,27 +59,50 @@ const DetalhesImovel = ({route}) => {
       <Modal
         visible={modalVisible}
         transparent={true}
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalContainer}>
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setModalVisible(false)}>
+            onPress={() => setModalVisible(false)}
+          >
             <Text style={styles.closeText}>Fechar</Text>
           </TouchableOpacity>
           <Image
-            source={{uri: imovel.photos[selectedPhotoIndex]}}
+            source={{ uri: imovel.photos[selectedPhotoIndex] }}
             style={styles.modalImage}
           />
         </View>
       </Modal>
-      <Text style={styles.text}>Tipo de Imóvel: {imovel.tipoImovel}</Text>
-      <Text style={styles.text}>Rua: {imovel.rua}</Text>
-      <Text style={styles.text}>Bairro: {imovel.bairro}</Text>
-      <Text style={styles.text}>Número: {imovel.numeroImovel}</Text>
-      <Text style={styles.text}>Complemento: {imovel.complemento}</Text>
-      <Text style={styles.text}>Tipo de Transação: {imovel.tipoTransacao}</Text>
-      <Text style={styles.text}>Valor: R$ {imovel.valor}</Text>
-      
+
+      <Text style={styles.text}>Tipo de Imóvel:</Text>
+      <Text style={styles.textValue}>{imovel.tipoImovel}</Text>
+
+      <Text style={styles.text}>Rua:</Text>
+      <Text style={styles.textValue}>{imovel.rua}</Text>
+
+      <Text style={styles.text}>Bairro:</Text>
+      <Text style={styles.textValue}>{imovel.bairro}</Text>
+
+      <Text style={styles.text}>Número:</Text>
+      <Text style={styles.textValue}>{imovel.numeroImovel}</Text>
+
+      <Text style={styles.text}>Complemento:</Text>
+      <Text style={styles.textValue}>{imovel.complemento}</Text>
+
+      <Text style={styles.text}>Tipo de Transação:</Text>
+      <Text style={styles.textValue}>{imovel.tipoTransacao}</Text>
+
+      <Text style={styles.text}>Valor:</Text>
+      <Text style={styles.textValue}>R$ {imovel.valor}</Text>
+
+      {(imovel.tipoTransacao === 'Venda' || imovel.tipoTransacao === 'Aluguel') && (
+        <TouchableOpacity style={styles.transactionButton} onPress={handleTransaction}>
+          <Text style={styles.transactionButtonText}>
+            {imovel.tipoTransacao === 'Venda' ? 'Comprar' : 'Alugar'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };
@@ -68,7 +112,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 20,
   },
   imovelPhoto: {
@@ -83,6 +126,12 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
+    color: '#4286f4',
+    marginBottom: 5,
+  },
+  textValue: {
+    fontSize: 18,
+    color: 'gray',
     marginBottom: 10,
   },
   modalContainer: {
@@ -107,6 +156,17 @@ const styles = StyleSheet.create({
   closeText: {
     fontSize: 18,
     color: 'black',
+  },
+  transactionButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#4286f4',
+    borderRadius: 5,
+  },
+  transactionButtonText: {
+    fontSize: 20,
+    color: '#FFF',
+    textAlign: 'center',
   },
 });
 

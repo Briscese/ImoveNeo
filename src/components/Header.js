@@ -1,19 +1,15 @@
-import React, {Component} from 'react';
-import {StyleSheet, Text, View, Platform, Image} from 'react-native';
-import {connect} from 'react-redux';
-import {Gravatar} from 'react-native-gravatar';
+import React, { Component } from 'react';
+import { StyleSheet, Text, View, Platform, Image } from 'react-native';
+import { connect } from 'react-redux';
+import { Gravatar } from 'react-native-gravatar';
 
 import icon from '../../assets/img/icon.png';
 
 class Header extends Component {
   render() {
     const name = this.props.name || 'Anonimo';
-    const gravatar = this.props.email ? (
-      <Gravatar
-        options={{email: this.props.email, secure: true}}
-        style={styles.avatar}
-      />
-    ) : null;
+    const photoURL = this.props.photoURL;
+
     return (
       <View style={styles.container}>
         <View style={styles.rowContainer}>
@@ -22,7 +18,16 @@ class Header extends Component {
         </View>
         <View style={styles.userContainer}>
           <Text style={styles.user}>{name}</Text>
-          {gravatar}
+          {photoURL ? (
+            <Image source={{ uri: photoURL }} style={styles.avatar} />
+          ) : (
+            this.props.email && (
+              <Gravatar
+                options={{ email: this.props.email, secure: true }}
+                style={styles.avatar}
+              />
+            )
+          )}
         </View>
       </View>
     );
@@ -64,14 +69,16 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     marginLeft: 10,
+    borderRadius: 15, // Para tornar a imagem circular
   },
 });
-const mapStateToProps = ({user}) => {
+
+const mapStateToProps = ({ user }) => {
   return {
     email: user.email,
     name: user.name,
+    photoURL: user.photoURL, // Adicione esta linha para obter a URL da foto do perfil
   };
 };
 
 export default connect(mapStateToProps)(Header);
-

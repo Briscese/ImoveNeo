@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, FlatList, Text, Image, TouchableOpacity } from 'react-native';
-import database from '@react-native-firebase/database'; // Importação correta do database
+import database from '@react-native-firebase/database';
 import Header from '../components/Header';
 
 class Imoveis extends Component {
@@ -19,7 +19,9 @@ class Imoveis extends Component {
         const imoveis = [];
         snapshot.forEach(childSnapshot => {
           const imovel = childSnapshot.val();
-          imoveis.push(imovel);
+          if (imovel.tipoTransacao === 'Venda' || imovel.tipoTransacao === 'Aluguel') {
+            imoveis.push({ ...imovel, id: childSnapshot.key });
+          }
         });
         this.setState({ imoveis });
       });
@@ -28,7 +30,6 @@ class Imoveis extends Component {
   renderItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => {
-        console.log("Imovel selecionado:", item); // Verifica o objeto imovel antes de navegar
         this.props.navigation.navigate('DetalhesImovel', { imovel: item });
       }}
     >
@@ -40,15 +41,14 @@ class Imoveis extends Component {
         )}
         <View style={styles.textoContainer}>
           <Text style={styles.texto}>{item.tipoTransacao}</Text>
-          <Text style={styles.texto}>Tipo de Imovel:{item.tipoImovel}</Text>
-          <Text style={styles.texto}>Rua:{item.rua}</Text>
-          <Text style={styles.texto}>Numero do Imovel:{item.numeroImovel}</Text>
+          <Text style={styles.texto}>Tipo de Imovel: {item.tipoImovel}</Text>
+          <Text style={styles.texto}>Rua: {item.rua}</Text>
+          <Text style={styles.texto}>Numero do Imovel: {item.numeroImovel}</Text>
           <Text style={styles.texto}>R$ {item.valor}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
-  
 
   render() {
     const { imoveis } = this.state;
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginRight: 10,
-    backgroundColor: '#ccc', // Cor de fundo para o espaço reservado
+    backgroundColor: '#ccc',
   },
   textoContainer: {
     flex: 1,

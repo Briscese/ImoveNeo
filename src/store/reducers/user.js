@@ -1,11 +1,11 @@
-// store/reducers/user.js
 import { USER_LOGGED_IN, USER_LOGGED_OUT } from '../actions/actionTypes';
 
 const initialState = {
     name: null,
     email: null,
     endereco: null,
-    telefonecelular: null
+    telefonecelular: null,
+    photoURL: null // Adicione esta linha
 };
 
 const reducer = (state = initialState, action) => {

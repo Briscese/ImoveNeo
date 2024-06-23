@@ -326,7 +326,7 @@ function AddImoveis() {
         />
       </MapView>
 
-      <Button title="Salvar" onPress={save} />
+      <Button title="Adicionar Imovel" onPress={save} />
     </ScrollView>
   );
 }

@@ -29,7 +29,7 @@ const Tab = createBottomTabNavigator();
 function MyTabs() {
   return (
     <Tab.Navigator
-      initialRouteName="Imoveis"
+      initialRouteName="Profile"
       screenOptions={{
         tabBarShowLabel: false,
       }}
